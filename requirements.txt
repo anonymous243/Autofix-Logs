@@ -1,0 +1,6 @@
+google-genai
+typer[all]
+python-dotenv
+rich
+watchdog
+pytest

@@ -1,0 +1,5 @@
+{
+  "name": "AutoFix Logs",
+  "description": "AI-Powered Log Analyzer CLI tool that helps you debug faster by extracting errors and providing actionable fixes using Google Gemini.",
+  "requestFramePermissions": []
+}
