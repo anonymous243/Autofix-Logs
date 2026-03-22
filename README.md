@@ -23,7 +23,7 @@ AutoFix Logs helps developers quickly understand errors from logs by providing s
 
 ## 📦 Installation
 
-### Install from GitHub
+###Install from PyPI
 
 ```bash
 pip install autofix-logs
@@ -35,7 +35,7 @@ pipx install autofix-logs
 
 ---
 
-### Local Installation
+### Install from Github
 
 ```bash
 git clone https://github.com/anonymous243/Autofix-Logs
