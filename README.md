@@ -26,7 +26,11 @@ AutoFix Logs helps developers quickly understand errors from logs by providing s
 ### Install from GitHub
 
 ```bash
-pipx install git+https://github.com/anonymous243/Autofix-Logs
+pip install autofix-logs
+
+or
+
+pipx install autofix-logs
 ```
 
 ---
