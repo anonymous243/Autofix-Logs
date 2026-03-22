@@ -34,7 +34,7 @@ pipx install git+https://github.com/anonymous243/Autofix-Logs
 ### Local Installation
 
 ```bash
-git clone https://github.com/anonymous243/Autofix-Logs.git
+git clone https://github.com/anonymous243/Autofix-Logs
 cd Autofix-Logs
 pip install .
 ```
@@ -88,7 +88,7 @@ autofix version
 ### Input
 
 ```
-autofix analyze <filename>
+autofix analyze <filename.log>
 ```
 
 ### Output
