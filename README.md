@@ -195,7 +195,3 @@ Contributions are welcome!
 Built by **Amar**
 
 ---
-
-To become a **developer-first AI debugging assistant** integrated into real-world workflows.
-
----
