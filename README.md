@@ -5,7 +5,7 @@
 ![CLI](https://img.shields.io/badge/Tool-CLI-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
-**AI-powered CLI tool to analyze logs and suggest fixes instantly.**
+**Open-source AI-powered CLI tool to analyze logs and suggest fixes instantly.**
 
 AutoFix Logs helps developers quickly understand errors from logs by providing structured explanations, root causes, and exact fix commands — directly in your terminal.
 
@@ -26,7 +26,7 @@ AutoFix Logs helps developers quickly understand errors from logs by providing s
 ### Install from GitHub
 
 ```bash
-pip install git+https://github.com/anonymous243/Autofix-Logs.git
+pipx install autofix-logs
 ```
 
 ---
@@ -36,7 +36,7 @@ pip install git+https://github.com/anonymous243/Autofix-Logs.git
 ```bash
 git clone https://github.com/anonymous243/Autofix-Logs.git
 cd Autofix-Logs
-pip install -e .
+pip install .
 ```
 
 ---
@@ -54,15 +54,33 @@ GEMINI_API_KEY=your_api_key_here
 ## 🚀 Usage
 
 ```bash
-autofix analyze app.log
+autofix analyze <filename.log>
 ```
 
-### Quick Mode
+### ⚡ Quick mode
 
 ```bash
-autofix analyze app.log --quick
+autofix analyze <filename.log> --quick
+```
+### 📊 Summary mode
+
+```bash
+autofix analyze <filename> --summary
+```
+### 👀 Watch logs in real-time
+```bash
+autofix watch <filename>
 ```
 
+### 🧰 Check system setup
+```bash
+autofix doctor
+```
+
+### 📌 Version
+```bash
+autofix version
+```
 ---
 
 ## 🧪 Example
@@ -70,14 +88,25 @@ autofix analyze app.log --quick
 ### Input
 
 ```
-ModuleNotFoundError: No module named 'requests'
+autofix analyze <filename>
 ```
 
 ### Output
 
 ```
-Error Type: ModuleNotFoundError
-Fix: pip install requests
+🚨 Error Detected
+
+Type: ModuleNotFoundError
+Confidence: High (100%)
+
+💡 Cause:
+The 'requests' package is not installed
+
+📖 Explanation:
+Python could not find the 'requests' module...
+
+⚡ Fix Command:
+pip install requests
 ```
 
 ---
@@ -109,25 +138,25 @@ autofix/
 
 ## 🧠 How It Works
 
-1. Reads log file
-2. Extracts error segments
-3. Sends to AI (Gemini)
-4. Parses structured JSON
-5. Displays formatted output
+1. Extracts error blocks from logs
+2. Filters noise and prioritizes real issues
+3. Sends optimized input to AI
+4. Returns structured fixes instantly
 
 ---
 
 ## 🔮 Roadmap
 
 * 📡 Watch mode (real-time logs)
+* Smarter error ranking
 * 🧩 Multi-error detection
-* 🌐 Web dashboard (SaaS)
 * 🐳 Docker support
 * 📴 Offline AI models
 
 ---
 
 ## 🤝 Contributing
+Contributions are welcome!
 
 1. Fork repo
 2. Create branch
@@ -155,8 +184,6 @@ MIT License
 Built by **Amar**
 
 ---
-
-## 🔥 Vision
 
 To become a **developer-first AI debugging assistant** integrated into real-world workflows.
 
