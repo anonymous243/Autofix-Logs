@@ -15,29 +15,48 @@ class Formatter:
         """
         Prints the AI analysis in a beautiful CLI format.
         """
-        # Error Type & Root Cause
-        console.print(Panel(
-            f"[bold red]Type:[/bold red] {analysis.get('error_type', 'Unknown')}\n"
-            f"[bold yellow]Root Cause:[/bold yellow] {analysis.get('root_cause', 'Unknown')}",
-            title="[bold red]Error Detected[/bold red]",
-            border_style="red",
-            box=box.ROUNDED
-        ))
+        console.print("\n🚨 [bold red]Error Detected[/bold red]")
+        console.print("────────────────────────")
+        console.print(f"[bold]Type:[/bold] {analysis.get('error_type', 'Unknown')}")
+        
+        conf = analysis.get("confidence", 0)
+        if conf >= 80:
+            console.print(f"[bold]Confidence:[/bold] [bold green]High ({conf}%)[/bold green]\n")
+        elif conf >= 50:
+            console.print(f"[bold]Confidence:[/bold] [bold yellow]Medium ({conf}%)[/bold yellow]\n")
+        else:
+            console.print(f"[bold]Confidence:[/bold] [bold red]Low ({conf}%)[/bold red]\n")
+        
+        console.print("💡 [bold yellow]Cause:[/bold yellow]")
+        console.print(f"{analysis.get('root_cause', 'Unknown')}\n")
+        
+        console.print("📖 [bold cyan]Explanation:[/bold cyan]")
+        console.print(f"{analysis.get('explanation', 'No explanation provided.')}\n")
+        
+        if analysis.get('fix_command'):
+            console.print("⚡ [bold magenta]Fix Command:[/bold magenta]")
+            console.print(f"{analysis.get('fix_command')}")
+        console.print()
 
-        # Explanation
-        console.print(f"\n[bold cyan]Explanation:[/bold cyan]\n{analysis.get('explanation', 'No explanation provided.')}")
+    @staticmethod
+    def print_quick(analysis: dict):
+        conf = analysis.get("confidence", 0)
+        c_str = "🟢" if conf >= 80 else "🟡" if conf >= 50 else "🔴"
+        console.print(f"Error: {analysis.get('error_type', 'Unknown')} {c_str}")
+        if analysis.get('fix_command'):
+            console.print(f"Fix: {analysis.get('fix_command')}")
 
-        # Fix Steps
-        if analysis.get('fix_steps'):
-            console.print("\n[bold green]Fix Steps:[/bold green]")
-            for i, step in enumerate(analysis['fix_steps'], 1):
-                console.print(f"  {i}. {step}")
-
-        # Commands
-        if analysis.get('commands'):
-            console.print("\n[bold magenta]Suggested Commands:[/bold magenta]")
-            for cmd in analysis['commands']:
-                console.print(Panel(f"[white]{cmd}[/white]", box=box.SQUARE, border_style="dim"))
+    @staticmethod
+    def print_summary(errors: list):
+        console.print(f"\n[bold]Total Errors Found:[/bold] {len(errors)}")
+        types_count = {}
+        for error in errors:
+            etype = error.get('type', 'unknown')
+            types_count[etype] = types_count.get(etype, 0) + 1
+        console.print("[bold]Breakdown by Type:[/bold]")
+        for etype, count in types_count.items():
+            console.print(f"  - {etype}: {count}")
+        console.print()
 
     @staticmethod
     def print_info(text: str):

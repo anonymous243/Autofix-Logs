@@ -1,79 +1,97 @@
 import re
-from typing import List, Optional, Dict
+from typing import List, Dict
 
 class ErrorExtractor:
-    """
-    Logic to identify and extract relevant error segments from logs.
-    """
-    
-    # Common error patterns
-    PATTERNS = {
-        "python": r"Traceback \(most recent call last\):",
-        "node": r"Error:.*?\n\s+at ",
-        "java": r"(?i)Exception in thread \".*\"|[\w\.]+(Exception|Error):",
-        "web_error": r"HTTP/\d\.\d\" (4\d{2}|5\d{2})| (4\d{2}|5\d{2}) \d+ ",
-        "generic_error": r"(?i)error|exception|fatal|failed",
-        "system": r"systemd\[\d+\]:.*?(?i)failed"
-    }
-
     def __init__(self):
-        self.current_traceback = []
-        self.in_traceback = False
+        # ✅ Use IGNORECASE securely
+        self.patterns = {
+            "python": re.compile(
+                r"Traceback \(most recent call last\):|\bException\b|\bError\b",
+                re.IGNORECASE,
+            ),
+            "node": re.compile(r"\bError\b|^\s*at\s+\w+", re.IGNORECASE),
+            "system": re.compile(r"\bERROR\b|\bFATAL\b|\bCRITICAL\b", re.IGNORECASE),
+        }
 
-    def extract_errors(self, lines: List[str]) -> List[Dict[str, str]]:
-        """
-        Processes a list of lines and returns structured error segments.
-        """
+        # Recognize when a new log entry begins (timestamps)
+        self.boundary_pattern = re.compile(
+            r"^\d{4}-\d{2}-\d{2}"               # 2023-11-12
+            r"|^\w{3} \d{2} \d{2}:\d{2}:\d{2}"  # Oct 12 10:00:00
+            r"|^\[\d{4}-"                       # [2023-
+            r"|^\d{2}/\w{3}/\d{4}"              # 12/Oct/2023
+        )
+
+    def is_error_line(self, line: str) -> bool:
+        return any(pattern.search(line) for pattern in self.patterns.values())
+
+    def is_boundary(self, line: str) -> bool:
+        # Ignore wrapped/indented stack traces, ensuring we don't prematurely stop capturing
+        if line.startswith(" ") or line.startswith("\t"):
+            return False
+        return bool(self.boundary_pattern.search(line))
+
+    def _deduplicate_and_extract_root(self, errors: List[Dict]) -> List[Dict]:
+        unique = {}
+        for err in errors:
+            content = err["content"]
+            lines = content.split("\n")
+            
+            # Focus on ROOT ERROR (Skip intermediate cascading noise)
+            # Especially for huge tracebacks, last ~10 lines have the actual failing logic
+            if len(lines) > 20:
+                content = "\n".join(lines[:5] + ["...[truncated intermediate noise]..."] + lines[-10:])
+            
+            # Dict key-based deduplication ensures only strictly unique blocks remain
+            unique[content] = {
+                "type": "error", # Explicit fallback for legacy CLI code
+                "content": content,
+                "start_line": err["start_line"],
+                "end_line": err["end_line"]
+            }
+            
+        return list(unique.values())
+
+    def extract_errors(self, lines: List[str]) -> List[Dict]:
         errors = []
-        temp_error = []
-        collecting = False
-        
-        for line in lines:
-            # Detect start of a Python traceback
-            if re.search(self.PATTERNS["python"], line):
-                if temp_error:
-                    errors.append({"type": "log_segment", "content": "\n".join(temp_error)})
-                temp_error = [line]
-                collecting = True
-                continue
-            
-            # Detect Java or Node.js error start
-            if (re.search(self.PATTERNS["java"], line) or re.search(r"Error:", line)) and not collecting:
-                if temp_error:
-                    errors.append({"type": "log_segment", "content": "\n".join(temp_error)})
-                temp_error = [line]
-                collecting = True
-                continue
+        current_block = []
+        capturing = False
+        start_index = 0
 
-            # Detect web errors (4xx, 5xx)
-            if not collecting and re.search(self.PATTERNS["web_error"], line):
-                errors.append({"type": "web_error", "content": line})
-                continue
+        for i, line in enumerate(lines, 1):
+            line_clean = line.rstrip()
+            is_empty = (line_clean.strip() == "")
+            is_new_section = self.is_boundary(line_clean)
 
-            # Detect generic errors if not already collecting a traceback
-            if not collecting and re.search(self.PATTERNS["generic_error"], line):
-                errors.append({"type": "single_line", "content": line})
-                continue
+            if capturing:
+                # 🛑 Stop capturing when blank line or actual new log entry (that ISN'T an error) occurs
+                if is_empty or (is_new_section and not self.is_error_line(line_clean)):
+                    errors.append(
+                        {
+                            "content": "\n".join(current_block),
+                            "start_line": start_index,
+                            "end_line": i - 1,
+                        }
+                    )
+                    capturing = False
+                    current_block = []
+                else:
+                    current_block.append(line_clean)
+                    continue
 
-            if collecting:
-                temp_error.append(line)
-                # Stop collecting if we see a line that doesn't look like part of a traceback
-                # (e.g., a line that doesn't start with whitespace or is a new log timestamp)
-                # Java/Node tracebacks usually have "at " or "Caused by:"
-                is_traceback_line = line.strip().startswith(("at ", "Caused by:", "...")) or line.startswith((" ", "\t"))
-                
-                if len(temp_error) > 1 and not is_traceback_line and not re.search(r"^\d{4}-\d{2}-\d{2}", line):
-                    # Check if it's just the end of the error message
-                    if len(temp_error) > 20: # Safety cap
-                        errors.append({"type": "traceback", "content": "\n".join(temp_error)})
-                        temp_error = []
-                        collecting = False
+            # 🚨 Start capturing
+            if not capturing and not is_empty and self.is_error_line(line_clean):
+                capturing = True
+                current_block = [line_clean]
+                start_index = i
 
-        if temp_error:
-            errors.append({"type": "traceback", "content": "\n".join(temp_error)})
-            
-        return errors
+        # 🔚 Close off EOF blocks
+        if capturing and current_block:
+            errors.append(
+                {
+                    "content": "\n".join(current_block),
+                    "start_line": start_index,
+                    "end_line": len(lines),
+                }
+            )
 
-    def is_critical(self, line: str) -> bool:
-        """Heuristic to check if a single line is likely a critical error."""
-        return any(re.search(pattern, line) for pattern in self.PATTERNS.values())
+        return self._deduplicate_and_extract_root(errors)

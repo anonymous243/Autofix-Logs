@@ -5,9 +5,9 @@ from watchdog.events import FileSystemEventHandler
 from .parser import stream_new_lines
 from .extractor import ErrorExtractor
 from .ai import AIService
-from .formatter import Formatter
+from .formatter import Formatte
 
-class LogWatcher(FileSystemEventHandler):
+class LogWatcher(FileSystemEventHandler)
     def __init__(self, file_path: Path, ai_service: AIService, extractor: ErrorExtractor):
         self.file_path = file_path
         self.ai_service = ai_service
