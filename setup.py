@@ -7,7 +7,10 @@ setup(
     install_requires=[
         "typer",
         "python-dotenv",
-        "google-genai"
+        "google-genai",
+        "rich",
+        "pyfiglet",
+        "watchdog"
     ],
     entry_points={
         "console_scripts": [
