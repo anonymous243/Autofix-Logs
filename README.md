@@ -110,6 +110,17 @@ pip install requests
 ```
 
 ---
+## Demo
+
+```CLI
+```
+<img width="718" height="362" alt="autofix" src="https://github.com/user-attachments/assets/1e29da93-c5c6-474b-bf3a-d2286ccb97a4" />
+
+```Error detection
+```
+<img width="697" height="378" alt="autofix op" src="https://github.com/user-attachments/assets/26b8bb78-23f5-49d0-8404-9f619b02afe3" />
+
+
 
 ## 📁 Project Structure
 
