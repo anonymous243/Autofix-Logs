@@ -23,7 +23,7 @@ AutoFix Logs helps developers quickly understand errors from logs by providing s
 
 ## 📦 Installation
 
-###Install from PyPI
+### Install from PyPI
 
 ```bash
 pip install autofix-logs
